@@ -1,0 +1,21 @@
+{
+  "id": "rain-gauge",
+  "type": "integration",
+  "name": "Pluviomètre à bascule",
+  "version": "0.1.0",
+  "description": "Tipping-bucket rain gauge read through a Zigbee2MQTT door contact (Aqara & co.)",
+  "icon": "CloudRain",
+  "repo": "adrienJouve/sowel-plugin-rain-gauge",
+  "author": "adrienJouve",
+  "sowelVersion": ">=1.21.0",
+  "settings": [
+    { "key": "mqtt_url", "label": "MQTT Broker URL", "type": "text", "required": true, "placeholder": "mqtt://localhost:1883" },
+    { "key": "mqtt_username", "label": "MQTT Username", "type": "text", "required": false },
+    { "key": "mqtt_password", "label": "MQTT Password", "type": "password", "required": false },
+    { "key": "mqtt_client_id", "label": "MQTT Client ID", "type": "text", "required": false, "defaultValue": "sowel-rain-gauge" },
+    { "key": "sensor_topic", "label": "Topic Zigbee2MQTT du capteur", "type": "text", "required": true, "defaultValue": "zigbee2mqtt/Pluviometre" },
+    { "key": "bucket_ml", "label": "Volume d'un godet (ml)", "type": "number", "required": false, "defaultValue": "5" },
+    { "key": "funnel_diameter_mm", "label": "Diamètre de l'entonnoir (mm)", "type": "number", "required": false, "defaultValue": "107.58" }
+  ],
+  "apiVersion": 2
+}

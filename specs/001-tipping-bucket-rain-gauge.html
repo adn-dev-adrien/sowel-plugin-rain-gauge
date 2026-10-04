@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pluviomètre Sowel</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --text:#2b3340; --muted:#6b7380; --line:#e3e6eb;
+  --primary:#3b82b6; --bar:#4F7BE8; --ok:#1f8a4c; --ok-bg:#e7f5ec; --ko:#c0392b; --ko-bg:#fbeaea;
+  --warn:#b7791f; --chip:#eef1f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c; --card:#1d2128; --text:#e4e7ec; --muted:#9aa3ae; --line:#2e343d;
+    --primary:#6fb0dc; --ok:#5cc98a; --ok-bg:#183324; --ko:#ef7d70; --ko-bg:#3a1f1c; --chip:#272c34;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171c; --card:#1d2128; --text:#e4e7ec; --muted:#9aa3ae; --line:#2e343d;
+  --primary:#6fb0dc; --ok:#5cc98a; --ok-bg:#183324; --ko:#ef7d70; --ko-bg:#3a1f1c; --chip:#272c34;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:17px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 18px}
+ul.tight{margin:0;padding-left:20px} ul.tight li{margin:3px 0}
+code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:13px;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font:inherit}
+input.bad{border-color:var(--ko);background:var(--ko-bg)}
+.err{color:var(--ko);font-size:12.5px;min-height:18px;margin-top:3px}
+.result{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:12px;padding:12px;border-radius:8px;background:var(--chip)}
+.result b{font-size:22px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer}
+button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 12px}
+.seg button.on{background:var(--primary);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.log{list-style:none;margin:0;padding:0;max-height:170px;overflow:auto;font-size:13.5px}
+.log li{padding:5px 8px;border-radius:6px;margin-bottom:4px}
+.log .ok{background:var(--ok-bg);color:var(--ok)}
+.log .ko{background:var(--ko-bg);color:var(--ko)}
+.sensor{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--muted)}
+.widget{border:1px solid var(--line);border-radius:12px;padding:14px;max-width:300px}
+.widget .t{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.widget .big{font-size:28px;font-weight:600;margin:4px 0}
+.widget .s{display:flex;gap:16px;font-size:13.5px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:620px){.cols{grid-template-columns:1fr}}
+svg text{fill:var(--muted);font-size:11px}
+#tip{position:fixed;pointer-events:none;background:var(--text);color:var(--bg);padding:5px 8px;border-radius:6px;font-size:12.5px;display:none;white-space:nowrap}
+.arb li{margin:6px 0}
+.reco{color:var(--ok);font-weight:600}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>Pluviomètre à bascule dans Sowel</h1>
+<p class="sub">Spec 001 · plugin <code>rain-gauge</code> · capteur <code>Pluviometre</code> (Aqara T1, déjà appairé sur <code>zigbee2mqtt_maison2</code>)</p>
+
+<div class="card">
+  <h2>En bref</h2>
+  <ul class="tight">
+    <li>Un plugin écoute le capteur sur MQTT : chaque <b>changement</b> de <code>contact</code> = un godet de 5 ml = <b>0,55 mm</b>.</li>
+    <li>Il publie une donnée <code>rain</code> que Sowel sait déjà tracer en barres (heure par heure, jour par jour sur 30 j) et cumuler (1 h / 24 h).</li>
+    <li>Aucune modif du cœur pour la base. Pas de 31 j (Sowel s'arrête à 30), pas de pluie reconstituée avant l'installation.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>1 · Réglages du plugin (étalonnage)</h2>
+  <div class="grid">
+    <div><label for="ml">Volume d'un godet (ml)</label><input id="ml" type="number" step="0.1" value="5"><div class="err" id="e-ml"></div></div>
+    <div><label for="d">Diamètre de l'entonnoir (mm)</label><input id="d" type="number" step="0.01" value="107.58"><div class="err" id="e-d"></div></div>
+    <div style="grid-column:1/-1"><label for="topic">Topic MQTT du capteur</label><input id="topic" type="text" value="zigbee2mqtt_maison2/Pluviometre"><div class="err" id="e-topic"></div></div>
+  </div>
+  <div class="result"><span>Chaque bascule compte</span><b id="mmtip">0,550 mm</b><span id="formula" class="note" style="margin:0"></span></div>
+  <div class="btns" style="margin-top:12px"><button class="primary" id="save">Enregistrer</button><span id="saved" class="note" style="margin:6px 0 0"></span></div>
+  <p class="note">Essayez 0, un diamètre de 5 mm, ou un topic avec <code>#</code> : l'enregistrement est refusé.</p>
+</div>
+
+<div class="card">
+  <h2>2 · Ce que le plugin compte</h2>
+  <div class="cols">
+    <div>
+      <div class="sensor"><span class="dot" id="dot"></span><span>Contact : <b id="cstate">fermé</b></span></div>
+      <div class="btns">
+        <button class="primary" id="b-tip">Le godet bascule</button>
+        <button id="b-same">Z2M republie (même état)</button>
+        <button id="b-bounce">Rebond &lt; 2 s</button>
+      </div>
+      <ul class="log" id="log"></ul>
+    </div>
+    <div>
+      <div class="row" style="margin-bottom:6px"><span class="note" style="margin:0">Tuile Météo</span>
+        <div class="seg" id="win"><button data-w="24h" class="on">24 h glissantes</button><button data-w="day">Depuis minuit</button></div></div>
+      <div class="widget">
+        <div class="t">☂ Pluviomètre</div>
+        <div class="big" id="w-big">0 mm</div>
+        <div class="s"><span>1 h : <b id="w-1h">0</b> mm</span><span id="w-lbl">24 h</span></div>
+      </div>
+      <p class="note">Chaque clic sur « bascule » ajoute 0,55 mm à l'heure en cours, donc aussi au graphique ci-dessous.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>3 · Le graphique</h2>
+  <div class="row">
+    <div class="seg" id="range"><button data-r="24h">24 h</button><button data-r="7d">7 j</button><button data-r="30d" class="on">30 j</button></div>
+    <div class="seg" id="color"><button data-c="flat" class="on">Bleu uni (Sowel)</button><button data-c="ha">Dégradé (comme HA)</button></div>
+  </div>
+  <svg id="chart" viewBox="0 0 800 260" width="100%" role="img" aria-label="Pluie par période"></svg>
+  <p class="note" id="total"></p>
+</div>
+
+<div class="card arb">
+  <h2>Tranché le 04/10</h2>
+  <ol>
+    <li><b>Couleur des barres</b> : bleu uni de Sowel, sans toucher au cœur.</li>
+    <li><b>Tuile</b> : 1 h / 24 h glissantes, comme Netatmo. « Aujourd'hui » = dernière barre du 30 j.</li>
+    <li><b>Diffusion</b> : source perso — à confirmer.</li>
+  </ol>
+  <p class="note">Risque : une bascule pendant une coupure Zigbee est perdue (le capteur capte mal : LQI 14 à 58).</p>
+</div>
+</main>
+<div id="tip"></div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(v,n){return v.toFixed(n==null?1:n).replace('.',',')};
+
+  // ---------- 1. Settings ----------
+  var mmPerTip=0.550, savedMm=0.550;
+  function validate(){
+    var ok=true, ml=parseFloat($('ml').value), d=parseFloat($('d').value), t=$('topic').value.trim();
+    function set(id,msg){$(id).classList.toggle('bad',!!msg);$('e-'+id).textContent=msg||'';if(msg)ok=false;}
+    set('ml', isNaN(ml)?'Saisissez un nombre.':(ml<0.5||ml>50)?'Entre 0,5 et 50 ml.':'');
+    set('d', isNaN(d)?'Saisissez un nombre.':(d<20||d>500)?'Entre 20 et 500 mm.':'');
+    set('topic', !t?'Le topic est obligatoire.':/[#+]/.test(t)?'Pas de joker # ou + : un seul capteur.':'');
+    if(ok){
+      var r=d/2, a=Math.PI*r*r; mmPerTip=ml*1000/a;
+      $('mmtip').textContent=fmt(mmPerTip,3)+' mm';
+      $('formula').textContent=fmt(ml*1000,0)+' mm³ ÷ '+fmt(a,0)+' mm²';
+    } else { $('mmtip').textContent='—'; $('formula').textContent='réglage refusé'; }
+    $('save').disabled=!ok; $('saved').textContent='';
+    return ok;
+  }
+  ['ml','d','topic'].forEach(function(id){$(id).addEventListener('input',validate)});
+  $('save').addEventListener('click',function(){ if(validate()){savedMm=mmPerTip;$('saved').textContent='Enregistré : '+fmt(savedMm,3)+' mm par bascule.';} });
+  validate();
+
+  // ---------- data ----------
+  var now=new Date(); now.setMinutes(30,0,0);
+  var curHour=new Date(now); curHour.setMinutes(0,0,0);
+  // hourly totals for the last 30 days (oldest first), deterministic
+  var seed=7; function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647;}
+  var H=30*24, hourly=[];
+  var rainyDays={2:1,3:1,9:1,10:1,11:1,16:1,21:1,22:1,26:1,29:1};
+  for(var i=0;i<H;i++){
+    var day=Math.floor(i/24), h=i%24, tips=0;
+    if(rainyDays[day] && rnd()<0.35) tips=Math.floor(rnd()*rnd()*9)+1;
+    hourly.push(tips*0.550);
+  }
+  // last hour index = current hour: start it at 0 (simulator fills it)
+  var curIdx=H-1; hourly[curIdx]=0;
+  // last 24h ends with a small shower 3-5h ago
+  hourly[H-4]=1.1; hourly[H-5]=2.2; hourly[H-6]=0.55;
+  function hourDate(i){return new Date(curHour.getTime()-(H-1-i)*3600e3);}
+  var tipsThisHour=[]; // minutes ago list for 1h rolling (simulated)
+
+  // ---------- 2. Simulator ----------
+  var contact=true, lastTip=-1e9, simClock=0;
+  function addLog(cls,txt){var li=document.createElement('li');li.className=cls;li.textContent=txt;$('log').prepend(li);}
+  function renderSensor(){$('cstate').textContent=contact?'fermé':'ouvert';$('dot').style.background=contact?'var(--ok)':'var(--primary)';}
+  $('b-tip').addEventListener('click',function(){
+    simClock+=45; contact=!contact; lastTip=simClock;
+    hourly[curIdx]+=savedMm; tipsThisHour.push(savedMm);
+    addLog('ok','Compté : contact '+(contact?'ouvert → fermé':'fermé → ouvert')+' · +'+fmt(savedMm,2)+' mm');
+    renderSensor(); renderWidget(); renderChart();
+  });
+  $('b-same').addEventListener('click',function(){
+    simClock+=45;
+    addLog('ko','Ignoré : contact toujours '+(contact?'fermé':'ouvert')+' (simple republication)');
+  });
+  $('b-bounce').addEventListener('click',function(){
+    if(lastTip<0){addLog('ko','Faites d\'abord basculer le godet.');return;}
+    addLog('ko','Ignoré : changement 0,8 s après la bascule (rebond de l\'aimant)');
+  });
+
+  var win='24h';
+  $('win').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;win=b.dataset.w;
+    [].forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});renderWidget();});
+  function sum(a,b){return a+b}
+  function renderWidget(){
+    var r1=hourly[curIdx]; // simplification: rolling 1h ≈ current hour + sim
+    var big;
+    if(win==='24h'){ big=hourly.slice(H-24).reduce(sum,0); $('w-lbl').textContent='24 h glissantes'; }
+    else { var start=H-1-curHour.getHours(); big=hourly.slice(start).reduce(sum,0); $('w-lbl').textContent='depuis minuit'; }
+    $('w-big').textContent=fmt(big)+' mm'; $('w-1h').textContent=fmt(r1);
+  }
+
+  // ---------- 3. Chart ----------
+  var range='30d', color='flat';
+  function haColor(v){ if(v>=12)return'#030ffc'; if(v>=7)return'#353ffc'; if(v>=5)return'#656dfc'; if(v>=3)return'#979dfc'; if(v>=1)return'#afb3fa'; return'#ffffff'; }
+  function buckets(){
+    var out=[];
+    if(range==='24h'){ for(var i=H-24;i<H;i++){var d=hourDate(i);out.push({v:hourly[i],lab:d.getHours()+'h',tt:d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric'})+' '+d.getHours()+' h'});} return out; }
+    var days=range==='7d'?7:30;
+    // group hourly by calendar day
+    var map={},order=[];
+    for(var j=0;j<H;j++){var dd=hourDate(j),k=dd.toDateString();if(!map[k]){map[k]={v:0,d:dd};order.push(k);}map[k].v+=hourly[j];}
+    order.slice(-days).forEach(function(k){var d=map[k].d;out.push({v:map[k].v,lab:d.getDate()+'',tt:d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})});});
+    return out;
+  }
+  function renderChart(){
+    var b=buckets(), svg=$('chart'), W=800, Hh=260, L=40, R=10, T=10, B=28;
+    var max=Math.max(1,Math.max.apply(null,b.map(function(x){return x.v})));
+    var step=max>10?5:max>4?2:max>2?1:0.5, top=Math.ceil(max/step)*step;
+    var pw=(W-L-R)/b.length, bw=Math.max(2,pw*0.7), s='';
+    for(var y=0;y<=top+1e-9;y+=step){var yy=T+(Hh-T-B)*(1-y/top);
+      s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)"/>';
+      s+='<text x="'+(L-6)+'" y="'+(yy+4)+'" text-anchor="end">'+fmt(y,y%1?1:0)+'</text>';}
+    var every=Math.ceil(b.length/12);
+    b.forEach(function(x,i){
+      var h=(Hh-T-B)*(x.v/top), X=L+i*pw+(pw-bw)/2, Y=Hh-B-h;
+      var fill=color==='ha'?haColor(x.v):'var(--bar)';
+      var stroke=color==='ha'?' stroke="#c9ccd8" stroke-width="0.8"':'';
+      s+='<rect data-i="'+i+'" x="'+X+'" y="'+(x.v>0?Y:Hh-B-1.5)+'" width="'+bw+'" height="'+(x.v>0?Math.max(h,1.5):1.5)+'" rx="2" fill="'+fill+'"'+stroke+(x.v>0?'':' opacity=".35"')+'/>';
+      s+='<rect data-i="'+i+'" x="'+(L+i*pw)+'" y="'+T+'" width="'+pw+'" height="'+(Hh-T-B)+'" fill="transparent"/>';
+      if(i%every===0||i===b.length-1) s+='<text x="'+(L+i*pw+pw/2)+'" y="'+(Hh-8)+'" text-anchor="middle">'+x.lab+'</text>';
+    });
+    svg.innerHTML=s; svg._b=b;
+    var tot=b.reduce(function(a,x){return a+x.v},0);
+    $('total').textContent='Total sur la période : '+fmt(tot)+' mm · '+(range==='24h'?'une barre par heure':'une barre par jour')+'. Survolez ou touchez une barre.';
+  }
+  function showTip(e){
+    var i=e.target.getAttribute&&e.target.getAttribute('data-i'); var tip=$('tip');
+    if(i==null){tip.style.display='none';return;}
+    var x=$('chart')._b[+i]; tip.textContent=x.tt+' : '+fmt(x.v)+' mm'; tip.style.display='block';
+    var px=(e.touches?e.touches[0]:e).clientX, py=(e.touches?e.touches[0]:e).clientY;
+    tip.style.left=Math.min(px+12,window.innerWidth-tip.offsetWidth-8)+'px'; tip.style.top=(py-36)+'px';
+  }
+  $('chart').addEventListener('mousemove',showTip);
+  $('chart').addEventListener('click',showTip);
+  $('chart').addEventListener('mouseleave',function(){$('tip').style.display='none'});
+  function seg(id,key,fn){$(id).addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    [].forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});fn(b.dataset[key]);renderChart();});}
+  seg('range','r',function(v){range=v}); seg('color','c',function(v){color=v});
+
+  renderSensor(); renderWidget(); renderChart();
+})();
+</script>
+</body>
+</html>
