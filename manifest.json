@@ -50,11 +50,11 @@
       "defaultValue": "5"
     },
     {
-      "key": "funnel_diameter_mm",
-      "label": "Diamètre de l'entonnoir (mm)",
+      "key": "funnel_radius_mm",
+      "label": "Rayon de l'entonnoir (mm)",
       "type": "number",
       "required": false,
-      "defaultValue": "107.58"
+      "defaultValue": "55"
     }
   ],
   "apiVersion": 2

@@ -4,8 +4,12 @@ import { HOUR_MS, RainCounter, hourStart, mmPerTip } from "./rain-counter.js";
 const T0 = Date.UTC(2026, 9, 4, 14, 0, 0); // 14:00:00 UTC
 
 describe("mmPerTip", () => {
-  it("matches the model's 0.550 mm for 5 ml in a 107.58 mm funnel", () => {
-    expect(mmPerTip(5, 107.58)).toBeCloseTo(0.55, 3);
+  it("matches the model's formula: 5 ml in a 53.79 mm radius funnel is 0.550 mm", () => {
+    expect(mmPerTip(5, 53.79)).toBeCloseTo(0.55, 3);
+  });
+
+  it("gives 0.526 mm for 5 ml in Adrien's 55 mm radius funnel", () => {
+    expect(mmPerTip(5, 55)).toBeCloseTo(0.5261, 4);
   });
 });
 

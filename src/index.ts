@@ -13,7 +13,7 @@ import type { DeviceManager, Logger } from "./rain-gauge-engine.js";
 import { mmPerTip } from "./rain-counter.js";
 import {
   DEFAULT_BUCKET_ML,
-  DEFAULT_FUNNEL_DIAMETER_MM,
+  DEFAULT_FUNNEL_RADIUS_MM,
   DEFAULT_SENSOR_TOPIC,
   deviceIdFromTopic,
   parseGaugeSettings,
@@ -141,11 +141,11 @@ class RainGaugePlugin implements IntegrationPlugin {
         defaultValue: String(DEFAULT_BUCKET_ML),
       },
       {
-        key: "funnel_diameter_mm",
-        label: "Diamètre de l'entonnoir (mm)",
+        key: "funnel_radius_mm",
+        label: "Rayon de l'entonnoir (mm)",
         type: "number",
         required: false,
-        defaultValue: String(DEFAULT_FUNNEL_DIAMETER_MM),
+        defaultValue: String(DEFAULT_FUNNEL_RADIUS_MM),
       },
     ];
   }
@@ -162,7 +162,7 @@ class RainGaugePlugin implements IntegrationPlugin {
       this.logger.error({ errors: parsed.errors }, "Invalid rain gauge settings — nothing is counted");
       return;
     }
-    const { sensorTopic, bucketMl, funnelDiameterMm } = parsed.settings;
+    const { sensorTopic, bucketMl, funnelRadiusMm } = parsed.settings;
 
     const mqttUrl = this.getSetting("mqtt_url")!;
     const mqttUsername = this.getSetting("mqtt_username") || undefined;
@@ -186,7 +186,7 @@ class RainGaugePlugin implements IntegrationPlugin {
           integrationId: INTEGRATION_ID,
           sensorTopic,
           deviceId: deviceIdFromTopic(sensorTopic),
-          mmPerTip: mmPerTip(bucketMl, funnelDiameterMm),
+          mmPerTip: mmPerTip(bucketMl, funnelRadiusMm),
           statePath: statePathIn(this.pluginDir),
         },
         this.mqtt,

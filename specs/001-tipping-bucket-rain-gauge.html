@@ -72,7 +72,7 @@ svg text{fill:var(--muted);font-size:11px}
 <div class="card">
   <h2>En bref</h2>
   <ul class="tight">
-    <li>Un plugin écoute le capteur sur MQTT : chaque <b>changement</b> de <code>contact</code> = un godet de 5 ml = <b>0,55 mm</b>.</li>
+    <li>Un plugin écoute le capteur sur MQTT : chaque <b>changement</b> de <code>contact</code> = un godet de 5 ml = <b>0,526 mm</b> (entonnoir de 55 mm de rayon).</li>
     <li>Il publie une donnée <code>rain</code> que Sowel sait déjà tracer en barres (heure par heure, jour par jour sur 30 j) et cumuler (1 h / 24 h).</li>
     <li>Aucune modif du cœur pour la base. Pas de 31 j (Sowel s'arrête à 30), pas de pluie reconstituée avant l'installation.</li>
   </ul>
@@ -82,12 +82,12 @@ svg text{fill:var(--muted);font-size:11px}
   <h2>1 · Réglages du plugin (étalonnage)</h2>
   <div class="grid">
     <div><label for="ml">Volume d'un godet (ml)</label><input id="ml" type="number" step="0.1" value="5"><div class="err" id="e-ml"></div></div>
-    <div><label for="d">Diamètre de l'entonnoir (mm)</label><input id="d" type="number" step="0.01" value="107.58"><div class="err" id="e-d"></div></div>
+    <div><label for="d">Rayon de l'entonnoir (mm)</label><input id="d" type="number" step="0.1" value="55"><div class="err" id="e-d"></div></div>
     <div style="grid-column:1/-1"><label for="topic">Topic MQTT du capteur</label><input id="topic" type="text" value="zigbee2mqtt_maison2/Pluviometre"><div class="err" id="e-topic"></div></div>
   </div>
-  <div class="result"><span>Chaque bascule compte</span><b id="mmtip">0,550 mm</b><span id="formula" class="note" style="margin:0"></span></div>
+  <div class="result"><span>Chaque bascule compte</span><b id="mmtip">0,526 mm</b><span id="formula" class="note" style="margin:0"></span></div>
   <div class="btns" style="margin-top:12px"><button class="primary" id="save">Enregistrer</button><span id="saved" class="note" style="margin:6px 0 0"></span></div>
-  <p class="note">Essayez 0, un diamètre de 5 mm, ou un topic avec <code>#</code> : l'enregistrement est refusé.</p>
+  <p class="note">Essayez 0, un rayon de 5 mm, ou un topic avec <code>#</code> : l'enregistrement est refusé.</p>
 </div>
 
 <div class="card">
@@ -110,7 +110,7 @@ svg text{fill:var(--muted);font-size:11px}
         <div class="big" id="w-big">0 mm</div>
         <div class="s"><span>1 h : <b id="w-1h">0</b> mm</span><span id="w-lbl">24 h</span></div>
       </div>
-      <p class="note">Chaque clic sur « bascule » ajoute 0,55 mm à l'heure en cours, donc aussi au graphique ci-dessous.</p>
+      <p class="note">Chaque clic sur « bascule » ajoute 0,526 mm à l'heure en cours, donc aussi au graphique ci-dessous.</p>
     </div>
   </div>
 </div>
@@ -143,15 +143,15 @@ svg text{fill:var(--muted);font-size:11px}
   var fmt=function(v,n){return v.toFixed(n==null?1:n).replace('.',',')};
 
   // ---------- 1. Settings ----------
-  var mmPerTip=0.550, savedMm=0.550;
+  var mmPerTip=0.526, savedMm=0.526;
   function validate(){
     var ok=true, ml=parseFloat($('ml').value), d=parseFloat($('d').value), t=$('topic').value.trim();
     function set(id,msg){$(id).classList.toggle('bad',!!msg);$('e-'+id).textContent=msg||'';if(msg)ok=false;}
     set('ml', isNaN(ml)?'Saisissez un nombre.':(ml<0.5||ml>50)?'Entre 0,5 et 50 ml.':'');
-    set('d', isNaN(d)?'Saisissez un nombre.':(d<20||d>500)?'Entre 20 et 500 mm.':'');
+    set('d', isNaN(d)?'Saisissez un nombre.':(d<10||d>250)?'Entre 10 et 250 mm.':'');
     set('topic', !t?'Le topic est obligatoire.':/[#+]/.test(t)?'Pas de joker # ou + : un seul capteur.':'');
     if(ok){
-      var r=d/2, a=Math.PI*r*r; mmPerTip=ml*1000/a;
+      var r=d, a=Math.PI*r*r; mmPerTip=ml*1000/a;
       $('mmtip').textContent=fmt(mmPerTip,3)+' mm';
       $('formula').textContent=fmt(ml*1000,0)+' mm³ ÷ '+fmt(a,0)+' mm²';
     } else { $('mmtip').textContent='—'; $('formula').textContent='réglage refusé'; }
@@ -172,12 +172,12 @@ svg text{fill:var(--muted);font-size:11px}
   for(var i=0;i<H;i++){
     var day=Math.floor(i/24), h=i%24, tips=0;
     if(rainyDays[day] && rnd()<0.35) tips=Math.floor(rnd()*rnd()*9)+1;
-    hourly.push(tips*0.550);
+    hourly.push(tips*0.526);
   }
   // last hour index = current hour: start it at 0 (simulator fills it)
   var curIdx=H-1; hourly[curIdx]=0;
   // last 24h ends with a small shower 3-5h ago
-  hourly[H-4]=1.1; hourly[H-5]=2.2; hourly[H-6]=0.55;
+  hourly[H-4]=1.05; hourly[H-5]=2.1; hourly[H-6]=0.53;
   function hourDate(i){return new Date(curHour.getTime()-(H-1-i)*3600e3);}
   var tipsThisHour=[]; // minutes ago list for 1h rolling (simulated)
 

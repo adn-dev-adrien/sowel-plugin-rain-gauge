@@ -7,10 +7,9 @@
  * a clock, and persists `snapshot()`.
  */
 
-/** Rain height (mm) of one bucket: V / A, with A the funnel opening area. */
-export function mmPerTip(bucketMl: number, funnelDiameterMm: number): number {
-  const radius = funnelDiameterMm / 2;
-  return (bucketMl * 1000) / (Math.PI * radius * radius);
+/** Rain height (mm) of one bucket: V / A, with A = π × r² the funnel opening area. */
+export function mmPerTip(bucketMl: number, funnelRadiusMm: number): number {
+  return (bucketMl * 1000) / (Math.PI * funnelRadiusMm * funnelRadiusMm);
 }
 
 export const HOUR_MS = 3_600_000;

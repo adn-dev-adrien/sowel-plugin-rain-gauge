@@ -36,9 +36,9 @@ rain keeps the totals right.
 | MQTT broker URL | — | same broker as Zigbee2MQTT |
 | Sensor topic | `zigbee2mqtt/Pluviometre` | `<base_topic>/<friendly_name>`; the friendly name becomes the device name |
 | Bucket volume (ml) | `5` | volume that makes one bucket tip (syringe calibration) |
-| Funnel diameter (mm) | `107.58` | opening of the gauge's funnel |
+| Funnel radius (mm) | `55` | radius of the gauge's funnel opening |
 
-Rain per tip = bucket volume ÷ funnel area: 5000 mm³ ÷ (π × 53.79²) ≈ **0.550 mm**.
+Rain per tip = bucket volume ÷ funnel area: 5000 mm³ ÷ (π × 55²) ≈ **0.526 mm**.
 An out-of-range value stops the plugin rather than recording wrong rain.
 
 ## Use in Sowel

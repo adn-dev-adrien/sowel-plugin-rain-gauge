@@ -112,12 +112,12 @@ describe("parseGaugeSettings", () => {
     expect(r.ok && r.settings).toEqual({
       sensorTopic: "zigbee2mqtt/Pluviometre",
       bucketMl: 4.8,
-      funnelDiameterMm: 107.58,
+      funnelRadiusMm: 55,
     });
   });
 
   it("refuses a wildcard topic and out-of-range calibration", () => {
-    const r = parseGaugeSettings(from({ sensor_topic: "z2m/#", bucket_ml: "0", funnel_diameter_mm: "5" }));
+    const r = parseGaugeSettings(from({ sensor_topic: "z2m/#", bucket_ml: "0", funnel_radius_mm: "5" }));
     expect(r.ok).toBe(false);
     expect(!r.ok && r.errors).toHaveLength(3);
   });

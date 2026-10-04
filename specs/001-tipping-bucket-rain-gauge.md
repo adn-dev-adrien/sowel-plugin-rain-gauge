@@ -12,10 +12,10 @@ in either direction = one bucket emptied.
 Rain height per tip comes from the funnel area:
 
 ```
-r     = 53.79 mm            (funnel diameter 107.58 mm)
-A     = π × r² ≈ 9090.03 mm²
+r     = 55 mm               (Adrien's funnel; the model's text uses 53.79 mm)
+A     = π × r² ≈ 9503.32 mm²
 V     = 5 ml = 5000 mm³
-h     = V / A ≈ 0.550 mm per tip
+h     = V / A ≈ 0.526 mm per tip   (0.550 with the model's 53.79 mm)
 ```
 
 The sensor is already paired on Adrien's instance: friendly name `Pluviometre`
@@ -53,9 +53,9 @@ on the MQTT broker and turns tips into rain.
 | `mqtt_client_id` | text | `sowel-rain-gauge` | — |
 | `sensor_topic` | text | `zigbee2mqtt/Pluviometre` | required, no `#` / `+` wildcard |
 | `bucket_ml` | number | `5` | 0.5 – 50 |
-| `funnel_diameter_mm` | number | `107.58` | 20 – 500 |
+| `funnel_radius_mm` | number | `55` | 10 – 250 |
 
-`mm_per_tip = bucket_ml × 1000 / (π × (funnel_diameter_mm / 2)²)`, logged at
+`mm_per_tip = bucket_ml × 1000 / (π × funnel_radius_mm²)`, logged at
 start. An invalid setting puts the integration in error with a French message
 naming the field; nothing is counted with a wrong factor.
 
