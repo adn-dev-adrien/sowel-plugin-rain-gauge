@@ -35,6 +35,13 @@ export function hourStart(nowMs: number): number {
   return Math.floor(nowMs / HOUR_MS) * HOUR_MS;
 }
 
+/** Last midnight in the process time zone (Sowel's container runs in the house's). */
+export function localMidnight(nowMs: number): number {
+  const d = new Date(nowMs);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
 function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
@@ -82,6 +89,11 @@ export class RainCounter {
   /** Rain since the start of the current clock hour (mm). */
   currentHour(nowMs: number): number {
     return this.sumSince(hourStart(nowMs), nowMs);
+  }
+
+  /** Rain since local midnight (mm): the daily counter, back to 0 at 00:00. */
+  today(nowMs: number): number {
+    return this.sumSince(localMidnight(nowMs), nowMs);
   }
 
   /** Rain over the rolling window ending now (mm). */

@@ -86,6 +86,19 @@ describe("RainCounter", () => {
   });
 });
 
+describe("today", () => {
+  it("counts since local midnight and starts again at 0 the next day", () => {
+    const midnight = new Date(2026, 9, 4, 0, 0, 0).getTime();
+    const c = new RainCounter(0.5, undefined, midnight - HOUR_MS);
+    c.onContact(false, midnight - HOUR_MS);
+    c.onContact(true, midnight - 10 * 60_000); // 23:50, yesterday
+    c.onContact(false, midnight + 10 * 60_000); // 00:10
+    c.onContact(true, midnight + 8 * HOUR_MS); // 08:00
+    expect(c.today(midnight + 9 * HOUR_MS)).toBe(1);
+    expect(c.today(midnight + 24 * HOUR_MS + 60_000)).toBe(0);
+  });
+});
+
 describe("hourStart", () => {
   it("floors to the clock hour", () => {
     expect(hourStart(T0 + 59 * 60_000 + 59_000)).toBe(T0);

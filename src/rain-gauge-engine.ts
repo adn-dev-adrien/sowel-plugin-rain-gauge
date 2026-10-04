@@ -76,6 +76,7 @@ export class RainGaugeEngine {
         { key: "rain", type: "number", category: "rain", unit: "mm" },
         { key: "sum_rain_1", type: "number", category: "rain", unit: "mm" },
         { key: "sum_rain_24", type: "number", category: "rain", unit: "mm" },
+        { key: "rain_today", type: "number", category: "rain", unit: "mm" },
         { key: "battery", type: "number", category: "battery", unit: "%" },
         { key: "tips_total", type: "number", category: "generic" },
       ],
@@ -167,6 +168,7 @@ export class RainGaugeEngine {
     this.deviceManager.updateDeviceData(this.opts.integrationId, this.opts.deviceId, {
       sum_rain_1: this.counter.rolling(HOUR_MS, now),
       sum_rain_24: this.counter.rolling(24 * HOUR_MS, now),
+      rain_today: this.counter.today(now),
       tips_total: this.counter.getTipsTotal(),
     });
     if (hour !== this.publishedHour) {

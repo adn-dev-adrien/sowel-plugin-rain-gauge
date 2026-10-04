@@ -20,8 +20,11 @@ A magnet on the see-saw drives the contact: each time a bucket fills up it tips 
 | `rain` | `rain` | yes | rain of the current clock hour (mm) |
 | `sum_rain_1` | `rain` | no | rolling last 60 min (mm) |
 | `sum_rain_24` | `rain` | no | rolling last 24 h (mm) |
+| `rain_today` | `rain` | no ¹ | since local midnight, back to 0 at 00:00 (mm) |
 | `battery` | `battery` | yes | sensor battery (%) |
 | `tips_total` | `generic` | no | lifetime tip count (diagnostics) |
+
+¹ It is a running total: un-historize it on the equipment binding, or its chart sums cumuls.
 
 `rain` is written with the **start of the hour as its timestamp**, so each hour is exactly
 one point in InfluxDB holding that hour's total.
